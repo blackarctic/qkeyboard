@@ -1,0 +1,14 @@
+{
+  "name": "qkeyboard",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "author": "Nick Galloway <blackarctic@icloud.com>",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^6.2.0",
+    "request": "^2.88.0"
+  }
+}
