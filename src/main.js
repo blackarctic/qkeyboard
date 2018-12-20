@@ -20,10 +20,9 @@ const lightGitlabPipelineStatusKeys = async () => {
   const NUM_OF_KEYS = 4;
   try {
     // get statuses
-    const statuses = await gitlab.getMergeRequestPipelineStatuses({
-      state: 'opened',
-      limit: NUM_OF_KEYS
-    });
+    const statuses = (await gitlab.getMergeRequestPipelineStatuses({
+      state: 'opened'
+    })).slice(0, NUM_OF_KEYS);
     // set key colors based on status
     statuses.map((status, i) => {
       let color = COLOR.RED;

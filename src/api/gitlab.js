@@ -1,13 +1,11 @@
 const request = require('request');
 
-const DEFAULT_NUM_OF_MRS = 5;
 const DEFAULT_MR_STATE = 'opened';
 
 const getMergeRequests = async (args) => {
 
   const {
-    state: state = DEFAULT_MR_STATE,
-    limit: limit = DEFAULT_NUM_OF_MRS
+    state: state = DEFAULT_MR_STATE
   } = args || {};
 
   const mergeRequests =
@@ -22,7 +20,6 @@ const getMergeRequests = async (args) => {
 
   const pipelinesPerMergeRequest = await Promise.all(pipelineRequests);
   return mergeRequests
-    .slice(0, limit)
     .map((x, i) => ({
       ...x,
       pipelines: pipelinesPerMergeRequest[i]
@@ -32,12 +29,11 @@ const getMergeRequests = async (args) => {
 const getMergeRequestPipelineStatuses = async (args) => {
 
   const {
-    state: state = DEFAULT_MR_STATE,
-    limit: limit = DEFAULT_NUM_OF_MRS
+    state: state = DEFAULT_MR_STATE
   } = args || {};
 
   const mergeRequests =
-    await getMergeRequests({ state, limit });
+    await getMergeRequests({ state });
 
   const pipelines = mergeRequests.map(x => x.pipelines[0]);
 
@@ -49,6 +45,10 @@ const getMergeRequestsFromApi = async (args) => {
     state: state = DEFAULT_MR_STATE
   } = args || {};
   return await doApiGetRequest(`/merge_requests?state=${state}`);
+};
+
+const getTodos = async () => {
+  return await doApiGetRequest(`/todos`);
 };
 
 const getPipelinesForMergeRequestFromApi = async (args) => {
@@ -89,13 +89,13 @@ const doApiGetRequest = (path) => {
 //
 // (async () => {
 //     const res = await getMergeRequestPipelineStatuses({
-//         state: 'all',
-//         limit: 20
+//         state: 'all'
 //     });
-//     console.log(res);
+//     console.log(res.slice(0, 20));
 // })();
 
 module.exports = {
   getMergeRequests,
-  getMergeRequestPipelineStatuses
+  getMergeRequestPipelineStatuses,
+  getTodos
 };
