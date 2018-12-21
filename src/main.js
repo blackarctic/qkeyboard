@@ -17,7 +17,21 @@ const COLOR = {
 };
 
 const lightGitlabPipelineStatusKeys = async () => {
+
   const NUM_OF_KEYS = 4;
+
+  const getColor = (status) => {
+    switch (status) {
+      case PIPELINE_STATUS.RUNNING:
+        return COLOR.BLUE;
+      case PIPELINE_STATUS.SUCCESS:
+        return COLOR.GREEN;
+      case PIPELINE_STATUS.FAILED:
+        return COLOR.RED;
+    }
+    return COLOR.RED;
+  };
+
   try {
     // get statuses
     const statuses = (await gitlab.getMergeRequestPipelineStatuses({
@@ -25,18 +39,7 @@ const lightGitlabPipelineStatusKeys = async () => {
     })).slice(0, NUM_OF_KEYS);
     // set key colors based on status
     statuses.map((status, i) => {
-      let color = COLOR.RED;
-      switch (status) {
-        case PIPELINE_STATUS.RUNNING:
-          color = COLOR.BLUE;
-          break;
-        case PIPELINE_STATUS.SUCCESS:
-          color = COLOR.GREEN;
-          break;
-        case PIPELINE_STATUS.FAILED:
-          color = COLOR.RED;
-          break;
-      }
+      const color = getColor(status);
       signals.sendColorSignal(`KEY_F${i+1}`, color);
     });
     // reset any keys we didn't have a status for
@@ -55,9 +58,51 @@ const lightGitlabPipelineStatusKeys = async () => {
   }
 }
 
+const lightGitlabTodoKeys = async () => {
+
+  const NUM_OF_KEYS = 10;
+
+  const getColor = (todo) => {
+    if (todo.state === 'merged') {
+      return COLOR.BLUE;
+    }
+    if (todo.action_name === 'approval_required') {
+      return COLOR.GREEN
+    }
+    return COLOR.RED;
+  };
+
+  try {
+    // get todos
+    const todos = (await gitlab.getTodos())
+      .filter(x => x.target_type === 'MergeRequest')
+      .filter(x => !x.target.work_in_progress)
+      .slice(0, NUM_OF_KEYS);
+    // set key color based on number of todos
+    todos.map((todo, i) => {
+      const color = getColor(todo);
+      signals.sendColorSignal(`KEY_${i+1 % 10}`, color);
+    });
+    // reset any keys we didn't have a todo for
+    (new Array(NUM_OF_KEYS)).fill(0).map((_, i) => {
+      const keyHasNoTodo = i > todos.length - 1;
+      if (keyHasNoTodo) {
+        signals.clearSignal(`KEY_${i+1 % 10}`);
+      }
+    });
+  } catch (e) {
+    // set all keys to yellow in case of failure
+    (new Array(NUM_OF_KEYS)).fill(0).map((_, i) =>
+      signals.sendColorSignal(`KEY_${i+1 % 10}`, COLOR.YELLOW)
+    );
+    throw e;
+  }
+}
+
 const main = async () => {
   await Promise.all([
-    lightGitlabPipelineStatusKeys()
+    lightGitlabPipelineStatusKeys(),
+    lightGitlabTodoKeys()
   ]);
 };
 
