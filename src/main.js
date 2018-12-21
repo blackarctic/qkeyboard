@@ -3,6 +3,8 @@ const gitlab = require('./api/gitlab');
 
 require('dotenv').config();
 
+const INTERVAL = 10000; // 10 seconds
+
 const PIPELINE_STATUS = {
   RUNNING: 'running',
   SUCCESS: 'success',
@@ -63,7 +65,7 @@ const lightGitlabTodoKeys = async () => {
   const NUM_OF_KEYS = 10;
 
   const getColor = (todo) => {
-    if (todo.state === 'merged') {
+    if (todo.target.state === 'merged') {
       return COLOR.BLUE;
     }
     if (todo.action_name === 'approval_required') {
@@ -106,4 +108,4 @@ const main = async () => {
   ]);
 };
 
-main();
+setInterval(main, INTERVAL);
